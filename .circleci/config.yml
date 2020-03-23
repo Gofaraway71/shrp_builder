@@ -46,6 +46,7 @@ jobs:
             git clone --depth 1 -b lineage-16.0 https://github.com/LineageOS/android_kernel_xiaomi_sdm845 kernel/xiaomi/sdm845
             git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
+            git clone --depth 1 https://github.com/redispade/kowalski-grus kernel/xiaomi/grus
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
             git clone --depth 1 ${DEVICE_ORG}/device_meizu_mblu2 device/meizu/mblu2
             git clone --depth 1 ${DEVICE_ORG}/android_device_xiaomi_sirius-twrp device/xiaomi/sirius
