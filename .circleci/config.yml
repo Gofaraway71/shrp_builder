@@ -10,11 +10,11 @@ jobs:
       - run:
           name: Create & Run a keep-alive shell
           command: |
-            # Basic trick to ping every 5 minutes in the background
+            # Basic trick to ping every 6 minutes in the background
             cat \<< EOF > /tmp/act.sh
             #!/bin/bash
             while true; do
-              echo -e "\n" && sleep 300
+              echo -e "\n" && sleep 360
             done
             EOF
             chmod a+x /tmp/act.sh
@@ -41,7 +41,6 @@ jobs:
       - run:
           name: Clone Device trees
           command: |
-            DEVICE_ORG="https://github.com/SHRP-Devices"
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
             git clone --depth 1 -b lineage-16.0 https://github.com/LineageOS/android_kernel_xiaomi_sdm845 kernel/xiaomi/sdm845
@@ -66,7 +65,7 @@ jobs:
             git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
             git clone --depth 1 -b lineage-16.0 https://github.com/SHRP-Devices/android_kernel_realme_sdm710 kernel/realme/sdm710
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
-            git clone --depth 1 ${DEVICE_ORG}device_oppo_PCCM00 device/oppo/PCCM00
+            git clone --depth 1 ${DEVICE_ORG}/device_oppo_PCCM00 device/oppo/PCCM00
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
@@ -81,7 +80,7 @@ jobs:
             mkdir releases          
             build_one()
             {
-              echo -e "\n Building for ${CODENAME} \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
+              echo -e "\n Building for ${CODENAME} \n\n" 2>&1 > /tmp/log/${CODENAME}.txt
               lunch omni_${CODENAME}-eng 2>&1 >> /tmp/log/${CODENAME}.txt
               /tmp/act.sh & make -j$(nproc --all) recoveryimage 2>&1 | sudo tee -api /tmp/log/${CODENAME}.txt
               echo -e "\n Build successful \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
