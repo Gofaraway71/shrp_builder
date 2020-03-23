@@ -66,7 +66,7 @@ jobs:
             git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
             git clone --depth 1 -b lineage-16.0 https://github.com/SHRP-Devices/android_kernel_realme_sdm710 kernel/realme/sdm710
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
-            git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
+            git clone --depth 1 ${DEVICE_ORG}device_oppo_PCCM00 device/oppo/PCCM00
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
@@ -89,15 +89,16 @@ jobs:
             ghrel()
             {
               mkdir -p releases/${CODENAME} || true
-              cp out/target/product/${CODENAME}/SHRP*.zip releases/${CODENAME}/
+              export BUILDFILE=$(find $(pwd)/out/target/product/${CODENAME}/SHRP*.zip 2>/dev/null)
+              cp ${BUILDFILE} releases/${CODENAME}/
               ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} \
                 -n "SkyHawk Recovery Project v2.2" -b "Latest Release for All Devices" -c ${CIRCLE_SHA1} -replace \
                 v2.2 releases/${CODENAME}/
-              for file in out/target/product/${CODENAME}/SHRP*.zip; do curl -F "file=@${file}" https://file.io; echo ""; done
+              ( curl -F "file=@${BUILDFILE}" https://file.io; echo "" ) || echo -e "\nfile.io upload error for ${CODENAME}\n"
             }
             CODENAME=mblu2; build_one; ghrel; make clean
             sed -i 's/false/true/g' device/meizu/mblu2/AndroidProducts.mk; build_one
-            rename 's/\.zip$/_64bit.zip/' releases/*zip; rename 's/\.zip$/_32bit.zip/' out/target/product/${CODENAME}/SHRP*zip
+            rename 's/\.zip$/_64bit.zip/' releases/mblu2/*zip; rename 's/\.zip$/_32bit.zip/' out/target/product/${CODENAME}/SHRP*zip
             ghrel; make clean
             CODENAME=tissot; build_one; ghrel; make clean
             CODENAME=beryllium; build_one; ghrel; make clean
