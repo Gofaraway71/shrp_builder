@@ -44,6 +44,7 @@ jobs:
             DEVICE_ORG="https://github.com/SHRP-Devices"
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
+            git clone --depth 1 -b lineage-16.0 https://github.com/LineageOS/android_kernel_xiaomi_sdm845 kernel/xiaomi/sdm845
             git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
@@ -61,9 +62,11 @@ jobs:
             git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_raphael device/xiaomi/raphael
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_violet device/xiaomi/violet
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_markw_shrp device/xiaomi/markw
+            git clone --depth 1 https://github.com/redispade/android_kernel_xiaomi_msm8953 kernel/xiaomi/markw
             git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
+            git clone --depth 1 -b lineage-16.0 https://github.com/SHRP-Devices/android_kernel_realme_sdm710 kernel/realme/sdm710
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
-            #git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
+            git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
             git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
@@ -83,49 +86,42 @@ jobs:
               /tmp/act.sh & make -j$(nproc --all) recoveryimage 2>&1 | sudo tee -api /tmp/log/${CODENAME}.txt
               echo -e "\n Build successful \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
             }
-            cleanify()
+            ghrel()
             {
-              cp out/target/product/${CODENAME}/SHRP*.zip releases/
-              make clean
+              mkdir -p releases/${CODENAME} || true
+              cp out/target/product/${CODENAME}/SHRP*.zip releases/${CODENAME}/
+              ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} \
+                -n "SkyHawk Recovery Project v2.2" -b "Latest Release for All Devices" -c ${CIRCLE_SHA1} -replace \
+                v2.2 releases/${CODENAME}/
+              for file in out/target/product/${CODENAME}/SHRP*.zip; do curl -F "file=@${file}" https://file.io; echo ""; done
             }
-            CODENAME=mblu2; build_one; cleanify
+            CODENAME=mblu2; build_one; ghrel; make clean
             sed -i 's/false/true/g' device/meizu/mblu2/AndroidProducts.mk; build_one
             rename 's/\.zip$/_64bit.zip/' releases/*zip; rename 's/\.zip$/_32bit.zip/' out/target/product/${CODENAME}/SHRP*zip
-            cleanify
-            CODENAME=tissot; build_one; cleanify
-            CODENAME=beryllium; build_one; cleanify
-            CODENAME=oneplus3; build_one; cleanify
-            CODENAME=grus; build_one; cleanify
-            CODENAME=wayne; build_one; cleanify
-            CODENAME=sirius; build_one; cleanify
-            CODENAME=dipper; build_one; cleanify
-            CODENAME=olive; build_one; cleanify
-            CODENAME=davinci; build_one; cleanify
-            CODENAME=vince; build_one; cleanify
-            CODENAME=jasmine_sprout; build_one; cleanify
-            CODENAME=whyred; build_one; cleanify
-            CODENAME=X00T; build_one; cleanify
-            CODENAME=c103; build_one; cleanify
-            CODENAME=rolex; build_one; cleanify
-            CODENAME=raphael; build_one; cleanify
-            CODENAME=violet; build_one; cleanify
-            CODENAME=markw; build_one; cleanify
-            CODENAME=RMX1851; build_one; cleanify
-            CODENAME=riva; build_one; cleanify
-            #CODENAME=PCCM00; build_one; cleanify
-            CODENAME=lavender; build_one; cleanify
-            CODENAME=pine; build_one; cleanify
-            CODENAME=laurel_sprout; build_one; cleanify
+            ghrel; make clean
+            CODENAME=tissot; build_one; ghrel; make clean
+            CODENAME=beryllium; build_one; ghrel; make clean
+            CODENAME=oneplus3; build_one; ghrel; make clean
+            CODENAME=grus; build_one; ghrel; make clean
+            CODENAME=wayne; build_one; ghrel; make clean
+            CODENAME=sirius; build_one; ghrel; make clean
+            CODENAME=dipper; build_one; ghrel; make clean
+            CODENAME=olive; build_one; ghrel; make clean
+            CODENAME=davinci; build_one; ghrel; make clean
+            CODENAME=vince; build_one; ghrel; make clean
+            CODENAME=jasmine_sprout; build_one; ghrel; make clean
+            CODENAME=whyred; build_one; ghrel; make clean
+            CODENAME=X00T; build_one; ghrel; make clean
+            CODENAME=c103; build_one; ghrel; make clean
+            CODENAME=rolex; build_one; ghrel; make clean
+            CODENAME=raphael; build_one; ghrel; make clean
+            CODENAME=violet; build_one; ghrel; make clean
+            CODENAME=markw; build_one; ghrel; make clean
+            CODENAME=RMX1851; build_one; ghrel; make clean
+            CODENAME=riva; build_one; ghrel; make clean
+            CODENAME=PCCM00; build_one; ghrel; make clean
+            CODENAME=lavender; build_one; ghrel; make clean
+            CODENAME=pine; build_one; ghrel; make clean
+            CODENAME=laurel_sprout; build_one; ghrel; make clean
             tar -cJf releases/all_logs.tar.xz /tmp/log/*.txt
             du -sh releases/*
-      - run:
-          name: GitHub Releas
-          command: |
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} \
-              -n "SkyHawk Recovery Project v2.2" -b "Latest Release for All Devices" -c ${CIRCLE_SHA1} -delete \
-              v2.2 releases/
-      - run:
-          name: Upload to file.io
-          command: |
-            cd releases
-            for file in *; do curl -F "file=@${file}" https://file.io; echo ""; done
