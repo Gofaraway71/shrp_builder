@@ -40,33 +40,33 @@ jobs:
             /tmp/act.sh & repo sync -c -q --force-sync --no-clone-bundle --optimized-fetch --prune --no-tags -j$(nproc --all)
       - run:
           name: Clone Device trees
-            command: |
-              DEVICE_ORG="https://github.com/SHRP-Devices"
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
-              git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
-              git clone --depth 1 ${DEVICE_ORG}/device_meizu_mblu2 device/meizu/mblu2
-              git clone --depth 1 ${DEVICE_ORG}/android_device_xiaomi_sirius-twrp device/xiaomi/sirius
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_dipper device/xiaomi/dipper
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_olive device/xiaomi/olive
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_davinci device/xiaomi/davinci
-              git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_vince device/xiaomi/vince
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_jasmine_sprout device/xiaomi/jasmine_sprout
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_whyred device/xiaomi/whyred
-              git clone --depth 1 ${DEVICE_ORG}/device_asus_X00T device/asus/X00T
-              git clone --depth 1 ${DEVICE_ORG}/device_coolpad_c103 device/coolpad/c103
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_rolex device/xiaomi/rolex
-              git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_raphael device/xiaomi/raphael
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_violet device/xiaomi/violet
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_markw_shrp device/xiaomi/markw
-              git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
-              #git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
-              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
+          command: |
+            DEVICE_ORG="https://github.com/SHRP-Devices"
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
+            git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
+            git clone --depth 1 ${DEVICE_ORG}/device_meizu_mblu2 device/meizu/mblu2
+            git clone --depth 1 ${DEVICE_ORG}/android_device_xiaomi_sirius-twrp device/xiaomi/sirius
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_dipper device/xiaomi/dipper
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_olive device/xiaomi/olive
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_davinci device/xiaomi/davinci
+            git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_vince device/xiaomi/vince
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_jasmine_sprout device/xiaomi/jasmine_sprout
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_whyred device/xiaomi/whyred
+            git clone --depth 1 ${DEVICE_ORG}/device_asus_X00T device/asus/X00T
+            git clone --depth 1 ${DEVICE_ORG}/device_coolpad_c103 device/coolpad/c103
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_rolex device/xiaomi/rolex
+            git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_raphael device/xiaomi/raphael
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_violet device/xiaomi/violet
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_markw_shrp device/xiaomi/markw
+            git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
+            #git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
+            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
     - run:
         name: Start build
         command: |
