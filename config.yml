@@ -1,0 +1,131 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: fr3akyphantom/droid-builder:latest
+    environment:
+      DEVICE_ORG: "https://github.com/SHRP-Devices"
+    working_directory: /home/builder/shrp/
+    steps:
+      - run:
+          name: Create & Run a keep-alive shell
+          command: |
+            # Basic trick to ping every 5 minutes in the background
+            cat \<< EOF > /tmp/act.sh
+            #!/bin/bash
+            while true; do
+              echo -e "\n" && sleep 300
+            done
+            EOF
+            chmod a+x /tmp/act.sh
+      - run:
+          name: Repo Init and Sync
+          command: |
+            # Set Git Credential
+            git config --global user.email $GitHubMail
+            git config --global user.name $GitHubName
+            git config --global color.ui true
+            git config --global credential.helper store
+            echo -e "\n Initialize repo Command"
+            repo init -q -u https://github.com/SKYHAWK-Recovery-Project/platform_manifest_twrp_omni.git -b 9.0 --depth 1
+            echo -e "\n Removing Unimportant Darwin-specific Files from syncing"
+            cd .repo/manifests
+            sed -i '/darwin/d' default.xml
+            ( find . -type f -name '*.xml' | xargs sed -i '/darwin/d' ) || true
+            git commit -a -m "Magic" || true
+            cd ../
+            sed -i '/darwin/d' manifest.xml
+            cd ../
+            echo -e "\n Syncing it up! Wait for a few minutes..."
+            /tmp/act.sh & repo sync -c -q --force-sync --no-clone-bundle --optimized-fetch --prune --no-tags -j$(nproc --all)
+      - run:
+          name: Clone Device trees
+            command: |
+              DEVICE_ORG="https://github.com/SHRP-Devices"
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
+              git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
+              git clone --depth 1 ${DEVICE_ORG}/device_meizu_mblu2 device/meizu/mblu2
+              git clone --depth 1 ${DEVICE_ORG}/android_device_xiaomi_sirius-twrp device/xiaomi/sirius
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_dipper device/xiaomi/dipper
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_olive device/xiaomi/olive
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_davinci device/xiaomi/davinci
+              git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_vince device/xiaomi/vince
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_jasmine_sprout device/xiaomi/jasmine_sprout
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_whyred device/xiaomi/whyred
+              git clone --depth 1 ${DEVICE_ORG}/device_asus_X00T device/asus/X00T
+              git clone --depth 1 ${DEVICE_ORG}/device_coolpad_c103 device/coolpad/c103
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_rolex device/xiaomi/rolex
+              git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_raphael device/xiaomi/raphael
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_violet device/xiaomi/violet
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_markw_shrp device/xiaomi/markw
+              git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
+              # git clone --depth 1 ${DEVICE_ORG}/TWRP_device_oppo_PCCM00 device/oppo/PCCM00
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
+              git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
+    - run:
+        name: Start build
+        command: |
+          echo -e "\n Build process starting..."
+          export ALLOW_MISSING_DEPENDENCIES=true
+          make clean || true
+          mkdir -p /tmp/log/
+          source build/envsetup.sh 2>&1 > /tmp/log/sourcing.txt
+          mkdir releases          
+          build_one()
+          {
+            echo -e "\n Building for ${CODENAME} \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
+            lunch omni_${CODENAME}-eng 2>&1 >> /tmp/log/${CODENAME}.txt
+            /tmp/act.sh & make -j$(nproc --all) recoveryimage 2>&1 | sudo tee -api /tmp/log/${CODENAME}.txt
+            echo -e "\n Build successful \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
+          }
+          cleanify()
+          {
+            cp out/target/product/${CODENAME}/SHRP*.zip releases/
+            make clean
+          }
+          CODENAME=mblu2; build_one; cleanify
+          sed -i 's/false/true/g' device/meizu/mblu2/AndroidProducts.mk; build_one
+          rename 's/\.zip$/_64bit.zip/' releases/*zip; rename 's/\.zip$/_32bit.zip/' out/target/product/${CODENAME}/SHRP*zip
+          cleanify
+          CODENAME=tissot; build_one; cleanify
+          CODENAME=beryllium; build_one; cleanify
+          CODENAME=oneplus3; build_one; cleanify
+          CODENAME=grus; build_one; cleanify
+          CODENAME=wayne; build_one; cleanify
+          CODENAME=sirius; build_one; cleanify
+          CODENAME=dipper; build_one; cleanify
+          CODENAME=olive; build_one; cleanify
+          CODENAME=davinci; build_one; cleanify
+          CODENAME=vince; build_one; cleanify
+          CODENAME=jasmine_sprout; build_one; cleanify
+          CODENAME=whyred; build_one; cleanify
+          CODENAME=X00T; build_one; cleanify
+          CODENAME=c103; build_one; cleanify
+          CODENAME=rolex; build_one; cleanify
+          CODENAME=raphael; build_one; cleanify
+          CODENAME=violet; build_one; cleanify
+          CODENAME=markw; build_one; cleanify
+          CODENAME=RMX1851; build_one; cleanify
+          CODENAME=riva; build_one; cleanify
+          # CODENAME=PCCM00; build_one; cleanify
+          CODENAME=lavender; build_one; cleanify
+          CODENAME=pine; build_one; cleanify
+          CODENAME=laurel_sprout; build_one; cleanify
+          tar -cJf releases/all_logs.tar.xz /tmp/log/*.txt
+          du -sh releases/*
+    - run:
+        name: GitHub Releas
+        command: |
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} \
+            -n "SkyHawk Recovery Project v2.2" -b "Latest Release for All Devices" -c ${CIRCLE_SHA1} -delete \
+            v2.2 releases/
+    - run:
+        name: Upload to file.io
+        command: |
+          cd releases
+          for file in *; do curl -F "file=@${file}" https://file.io; echo ""; done
