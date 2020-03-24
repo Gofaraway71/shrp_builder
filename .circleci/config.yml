@@ -4,8 +4,13 @@ jobs:
     docker:
       - image: fr3akyphantom/droid-builder:latest
     environment:
-      DEVICE_ORG: "https://github.com/SHRP-Devices"
-    working_directory: /home/builder/shrp/
+      MANIFEST_BRANCH: 'android-9.0'
+      # PBRP_BRANCH: 'android-9.0'
+      VERSION: '2.9.0'
+      VENDOR: 'zuk'
+      CODENAME: 'z2_plus'
+      TEST_BUILD: 'true'
+    working_directory: /home/builder/pitchblack/
     steps:
       - run:
           name: Create & Run a keep-alive shell
@@ -27,7 +32,7 @@ jobs:
             git config --global color.ui true
             git config --global credential.helper store
             echo -e "\n Initialize repo Command"
-            repo init -q -u https://github.com/SKYHAWK-Recovery-Project/platform_manifest_twrp_omni.git -b 9.0 --depth 1
+            repo init -q -u https://github.com/PitchBlackRecoveryProject/manifest_pb.git -b ${MANIFEST_BRANCH} --depth 1
             echo -e "\n Removing Unimportant Darwin-specific Files from syncing"
             cd .repo/manifests
             sed -i '/darwin/d' default.xml
@@ -38,34 +43,12 @@ jobs:
             cd ../
             echo -e "\n Syncing it up! Wait for a few minutes..."
             /tmp/act.sh & repo sync -c -q --force-sync --no-clone-bundle --optimized-fetch --prune --no-tags -j$(nproc --all)
-      - run:
-          name: Clone Device trees
-          command: |
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_tissot device/xiaomi/tissot
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_beryllium device/xiaomi/beryllium
-            git clone --depth 1 ${DEVICE_ORG}/device_oneplus_oneplus3 device/oneplus/oneplus3
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_grus-twrp device/xiaomi/grus
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_wayne device/xiaomi/wayne
-            git clone --depth 1 ${DEVICE_ORG}/device_meizu_mblu2 device/meizu/mblu2
-            git clone --depth 1 ${DEVICE_ORG}/android_device_xiaomi_sirius-twrp device/xiaomi/sirius
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_dipper device/xiaomi/dipper
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_olive device/xiaomi/olive
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_davinci device/xiaomi/davinci
-            git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_vince device/xiaomi/vince
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_jasmine_sprout device/xiaomi/jasmine_sprout
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_whyred device/xiaomi/whyred
-            git clone --depth 1 ${DEVICE_ORG}/device_asus_X00T device/asus/X00T
-            git clone --depth 1 ${DEVICE_ORG}/device_coolpad_c103 device/coolpad/c103
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_rolex device/xiaomi/rolex
-            git clone --depth 1 ${DEVICE_ORG}/recovery_device_xiaomi_raphael device/xiaomi/raphael
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_violet device/xiaomi/violet
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_markw_shrp device/xiaomi/markw
-            git clone --depth 1 ${DEVICE_ORG}/device_realme_RMX1851 device/realme/RMX1851
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_riva device/xiaomi/riva
-            git clone --depth 1 ${DEVICE_ORG}/device_oppo_PCCM00 device/oppo/PCCM00
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_lavender device/xiaomi/lavender
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_pine device/xiaomi/pine
-            git clone --depth 1 ${DEVICE_ORG}/device_xiaomi_laurel_sprout device/xiaomi/laurel_sprout
+            echo -e "\nGetting the Device Tree on place"
+            git clone --quiet --progress https://github.com/PitchBlackRecoveryProject/android_device_zuk_z2_plus-pbrp -b PitchBlack device/${VENDOR}/${CODENAME}
+            if [[ -n ${PBRP_BRANCH} ]]; then
+              rm -rf bootable/recovery
+              git clone --quiet --progress https://github.com/PitchBlackRecoveryProject/android_bootable_recovery -b ${PBRP_BRANCH} --single-branch bootable/recovery
+            fi
       - run:
           name: Start build
           command: |
@@ -74,55 +57,24 @@ jobs:
             make clean || true
             mkdir -p /tmp/log/
             mkdir releases          
-            build_one()
-            {
-              echo -e "\n Building for ${CODENAME} \n\n" 2>&1 > /tmp/log/${CODENAME}.txt
-              source build/envsetup.sh 2>&1 >> /tmp/log/${CODENAME}.txt
-              lunch omni_${CODENAME}-eng 2>&1 >> /tmp/log/${CODENAME}.txt
-              /tmp/act.sh & make -j$(nproc --all) recoveryimage 2>&1 | sudo tee -api /tmp/log/${CODENAME}.txt
-              echo -e "\n Build successful \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
-            }
-            ghrel()
-            {
-              mkdir -p releases/${CODENAME} || true
-              export BUILDFILE=$(find $(pwd)/out/target/product/${CODENAME}/SHRP*.zip 2>/dev/null)
-              cp ${BUILDFILE} releases/${CODENAME}/
-              ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} \
-                -n "SkyHawk Recovery Project v2.2" -b "Latest Release for All Devices" -c ${CIRCLE_SHA1} -replace \
-                v2.2 releases/${CODENAME}/
-              ( curl -F "file=@${BUILDFILE}" https://file.io; echo "" ) || echo -e "\nfile.io upload error for ${CODENAME}\n"
-            }
-            CODENAME=mblu2; build_one; ghrel; make clean
-            sed -i 's/false/true/g' device/meizu/mblu2/AndroidProducts.mk; build_one
-            rename 's/\.zip$/_64bit.zip/' releases/mblu2/*zip; rename 's/\.zip$/_32bit.zip/' out/target/product/${CODENAME}/SHRP*zip
-            ghrel; make clean
-            CODENAME=tissot; build_one; ghrel; make clean
-            rm -rf kernel || true; git clone --depth 1 -b lineage-16.0 https://github.com/LineageOS/android_kernel_xiaomi_sdm845 kernel/xiaomi/sdm845
-            CODENAME=beryllium; build_one; ghrel; make clean
-            CODENAME=oneplus3; build_one; ghrel; make clean
-            rm -rf kernel || true; git clone --depth 1 https://github.com/redispade/kowalski-grus kernel/xiaomi/grus
-            CODENAME=grus; build_one; ghrel; make clean
-            CODENAME=wayne; build_one; ghrel; make clean
-            CODENAME=sirius; build_one; ghrel; make clean
-            CODENAME=dipper; build_one; ghrel; make clean
-            CODENAME=olive; build_one; ghrel; make clean
-            CODENAME=davinci; build_one; ghrel; make clean
-            CODENAME=vince; build_one; ghrel; make clean
-            CODENAME=jasmine_sprout; build_one; ghrel; make clean
-            CODENAME=whyred; build_one; ghrel; make clean
-            CODENAME=X00T; build_one; ghrel; make clean
-            CODENAME=c103; build_one; ghrel; make clean
-            CODENAME=rolex; build_one; ghrel; make clean
-            CODENAME=raphael; build_one; ghrel; make clean
-            CODENAME=violet; build_one; ghrel; make clean
-            rm -rf kernel || true; git clone --depth 1 https://github.com/redispade/android_kernel_xiaomi_msm8953 kernel/xiaomi/markw
-            CODENAME=markw; build_one; ghrel; make clean
-            rm -rf kernel || true; git clone --depth 1 -b lineage-16.0 https://github.com/SHRP-Devices/android_kernel_realme_sdm710 kernel/realme/sdm710
-            CODENAME=RMX1851; build_one; ghrel; make clean
-            CODENAME=riva; build_one; ghrel; make clean
-            CODENAME=PCCM00; build_one; ghrel; make clean
-            CODENAME=lavender; build_one; ghrel; make clean
-            CODENAME=pine; build_one; ghrel; make clean
-            CODENAME=laurel_sprout; build_one; ghrel; make clean
+            echo -e "\n Building for ${CODENAME} \n\n" 2>&1 > /tmp/log/${CODENAME}.txt
+            source build/envsetup.sh 2>&1 >> /tmp/log/${CODENAME}.txt
+            lunch omni_${CODENAME}-eng 2>&1 >> /tmp/log/${CODENAME}.txt
+            /tmp/act.sh & make -j$(nproc --all) recoveryimage 2>&1 | sudo tee -api /tmp/log/${CODENAME}.txt
+            echo -e "\n Build successful \n\n" 2>&1 >> /tmp/log/${CODENAME}.txt
+            mkdir -p releases/${CODENAME} || true
+            export BUILDFILE=$(find $(pwd)/out/target/product/${CODENAME}/PitchBlack*.zip 2>/dev/null)
+            cp ${BUILDFILE} releases/${CODENAME}/
+            ( curl -F "file=@${BUILDFILE}" https://file.io; echo -e "\n" ) || echo -e "\nfile.io upload error for ${CODENAME}\n"
             tar -cJf releases/all_logs.tar.xz /tmp/log/*.txt
+            ( curl -F "file=@releases/all_logs.tar.xz" https://file.io; echo -e "\n" ) || echo -e "\nfile.io upload error for logs\n"
             du -sh releases/*
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: 'tester'
